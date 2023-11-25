@@ -1,18 +1,35 @@
 import { db } from "../database/connect.js";
-import { config as configDotenv } from "dotenv";
 
 
-const award = (req, rep) => {
-   const award = rep.param.award;
-   const query = "";
+const getTop10LikeOfUser = (req, res) => {
+    const blog_id = req.params.blog_id;
+    const query = 'SELECT top 10 from user_id = ? where COUNT(*) AS like_count FROM blog_like WHERE blog_id = ?;;'
+  
+    db.query(query, [blog_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+      const likeCount = parseInt(result[0].like_count, 10);
+      return res.status(200).json(likeCount);
+    });
+  };
 
-   db.query(
-    
-   )
-}
+  const getTop10CmtOfUser = (req, res) => {
+    const blog_id = req.params.blog_id;
+    const query = 'SELECT top 10 from user_id = ? where COUNT(*) AS comment_count FROM comment WHERE blog_id = ?;;'
+  
+    db.query(query, [blog_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+      const comment_count = parseInt(result[0].comment_count, 10);
+      return res.status(200).json(comment_count);
+    });
+  };
 
-app.get('/checkUserLikedBlog', (req,rep) => {
-        res.send("Get liek success")
-})
-
-
+  export default {
+    getTop10LikeOfUser,
+    getTop10CmtOfUser
+  };

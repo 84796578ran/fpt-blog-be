@@ -390,7 +390,6 @@ const rejectBlog = (req, res) => {
     return res.status(200).json("Successfully reject blog");
   });
 };
-
 const getBlogWithTags = (req, res) => {
   const blogId = req.params.blog_id;
 
@@ -406,30 +405,56 @@ const getBlogWithTags = (req, res) => {
         b.visual,
         b.created_at,
         b.published_at,
-        GROUP_CONCAT(t.title) AS tag_titles
+        GROUP_CONCAT(t.title) AS tag_titles,
+        GROUP_CONCAT(t.tag_id) AS tag_ids  -- Thêm tag_id vào SELECT
     FROM
         blog b
     LEFT JOIN
-        category c
-    ON
-        b.category_id = c.category_id
+        category c ON b.category_id = c.category_id
     LEFT JOIN
-        user u
-    ON
-        b.user_id = u.user_id
+        user u ON b.user_id = u.user_id
     LEFT JOIN
-        blog_tags bt
-    ON
-        b.blog_id = bt.blog_id
+        blog_tags bt ON b.blog_id = bt.blog_id
     LEFT JOIN
-        tag t
-    ON
-        bt.tag_id = t.tag_id
+        tag t ON bt.tag_id = t.tag_id
     WHERE
-        b.blog_id = ?
+         b.blog_id = ?
     GROUP BY
-        b.blog_id;
+          b.blog_id;
   `;
+
+  // Thực hiện truy vấn SQL
+  db.query(queryBlogData, [blogId], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    // Xử lý kết quả để tạo ra mảng các đối tượng với tag_title và tag_id
+    const blogs = results.map(blog => {
+      return {
+        blog_id: blog.blog_id,
+        user_name: blog.user_name,
+        blog_title: blog.blog_title,
+        category_description: blog.category_description,
+        content: blog.content,
+        status: blog.status,
+        view: blog.view,
+        visual: blog.visual,
+        created_at: blog.created_at,
+        published_at: blog.published_at,
+        tags: blog.tag_titles.split(',').map((title, index) => ({
+          title,
+          tag_id: blog.tag_ids.split(',')[index]
+        }))
+      };
+    });
+
+    // Trả về mảng kết quả
+    res.json(blogs);
+  });
+
 
   const queryRelatedBlogIds = `
     SELECT
@@ -479,6 +504,94 @@ const getBlogWithTags = (req, res) => {
     );
   });
 };
+// const getBlogWithTags = (req, res) => {
+//   const blogId = req.params.blog_id;
+
+//   const queryBlogData = `
+//     SELECT
+//         b.blog_id,
+//         CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+//         b.blog_title,
+//         c.description AS category_description,
+//         b.content,
+//         b.status,
+//         b.view,
+//         b.visual,
+//         b.created_at,
+//         b.published_at,
+//         GROUP_CONCAT(t.title) AS tag_titles
+//     FROM
+//         blog b
+//     LEFT JOIN
+//         category c
+//     ON
+//         b.category_id = c.category_id
+//     LEFT JOIN
+//         user u
+//     ON
+//         b.user_id = u.user_id
+//     LEFT JOIN
+//         blog_tags bt
+//     ON
+//         b.blog_id = bt.blog_id
+//     LEFT JOIN
+//         tag t
+//     ON
+//         bt.tag_id = t.tag_id
+//     WHERE
+//         b.blog_id = ?
+//     GROUP BY
+//         b.blog_id;
+//   `;
+
+//   const queryRelatedBlogIds = `
+//     SELECT
+//         b.blog_id
+//     FROM
+//         blog b
+//     WHERE
+//         b.category_id = (
+//             SELECT
+//                 b.category_id
+//             FROM
+//                 blog b
+//             WHERE
+//                 b.blog_id = ?
+//         )
+//         AND b.blog_id <> ?
+//     ORDER BY
+//         b.created_at DESC
+//     LIMIT 3;
+//   `;
+
+//   db.query(queryBlogData, [blogId], (err, resultBlogData) => {
+//     if (err) {
+//       console.error(err);
+//       return res.status(500).json({ error: "Internal Server Error" });
+//     }
+//     if (resultBlogData.length === 0) {
+//       return res.status(404).json({ error: "Blog not found" });
+//     }
+
+//     const blogData = resultBlogData[0];
+//     blogData.tag_titles = blogData.tag_titles.split(",");
+
+//     db.query(
+//       queryRelatedBlogIds,
+//       [blogId, blogId],
+//       (err, resultRelatedBlogIds) => {
+//         if (err) {
+//           console.error(err);
+//           return res.status(500).json({ error: "Internal Server Error" });
+//         }
+
+//         const relatedBlogIds = resultRelatedBlogIds.map((blog) => blog.blog_id);
+
+//         return res.status(200).json({ blogData, relatedBlogIds });
+//       }
+//     );
+//   });
+// };
 
 const saveBlog = (req, res) => {
   const { blog_id, user_id } = req.body;
@@ -602,6 +715,79 @@ LIMIT 6;`;
     return res.status(200).json(data);
   });
 };
+const getBlogbyTag = (req, res) => {
+  const page = parseInt(req.query.page);
+  const page_size = 6;
+  const offset = (page - 1) * page_size;
+
+  const countQuery = `
+    SELECT COUNT(*) AS total_count
+    FROM blog_tags
+    WHERE tag_id = ?;
+  `;
+
+  const query = `
+    SELECT
+        b.blog_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+        b.blog_title,
+        c.description AS category_description,
+        b.content,
+        b.status,
+        b.view,
+        b.visual,
+        b.created_at,
+        b.published_at,
+        GROUP_CONCAT(t.title) AS tag_titles
+    FROM
+        blog b
+    LEFT JOIN
+        category c ON b.category_id = c.category_id
+    LEFT JOIN
+        user u ON b.user_id = u.user_id
+    LEFT JOIN
+        blog_tags bt ON b.blog_id = bt.blog_id
+    LEFT JOIN
+        tag t ON bt.tag_id = t.tag_id
+    WHERE
+        t.tag_id = ?  -- Thay '=' thành 'LIKE' nếu bạn muốn tìm kiếm theo một phần của tag
+    GROUP BY
+        b.blog_id
+    ORDER BY
+        b.created_at DESC
+    LIMIT
+        ?
+    OFFSET
+        ?;
+  `;
+
+  db.query(countQuery, [req.params.tag_id], (countErr, countData) => {
+    if (countErr) {
+      console.error(countErr);
+      return res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      const total_count = countData[0].total_count;
+      const total_pages = Math.ceil(total_count / page_size);
+
+      db.query(
+        query,
+        [req.params.tag_id, page_size, offset],
+        (queryErr, data) => {
+          if (queryErr) {
+            console.error(queryErr);
+            return res.status(500).json({ error: "Internal Server Error" });
+          } else {
+            data.forEach((blog) => {
+              blog.tag_titles = blog.tag_titles.split(",");
+            });
+
+            return res.status(200).json({ data, total_pages });
+          }
+        }
+      );
+    }
+  });
+};
 
 export default {
   getAllCategory,
@@ -622,4 +808,5 @@ export default {
   saveBlog,
   unsaveBlog,
   getCategoryPostById,
+  getBlogbyTag
 };

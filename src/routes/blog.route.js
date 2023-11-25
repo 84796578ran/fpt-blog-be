@@ -13,6 +13,7 @@ router.get("/tags/:tag_id", blogController.getTagById);
 router.get("/tags/category/:category_id", blogController.getTagByCategory);
 
 router.get("/:blog_id", blogController.getBlogWithTags);
+router.get("/tag-blog/:tag_id", blogController.getBlogbyTag);
 
 router.post("/create", blogController.createBlog);
 router.post("/create/blog-tags", blogController.createBlogTags);
