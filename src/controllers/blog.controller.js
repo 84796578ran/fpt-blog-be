@@ -390,37 +390,74 @@ const rejectBlog = (req, res) => {
     return res.status(200).json("Successfully reject blog");
   });
 };
+
+const createReject = (req, res) => {
+  const reject_id = uuidv4();
+  const query =
+    "INSERT INTO reject (reject_id, user_id, blog_id, reject_reason, created_at) VALUES (?,?,?,?,NOW())";
+
+  db.query(
+    query,
+    [
+      reject_id,
+      req.body.user_id,
+      req.body.blog_id,
+      req.body.reject_reason,
+      
+    ],
+    (err, data) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json(err);
+      }
+
+      const createdReject = {
+        reject_id: reject_id, 
+        user_id: req.body.user_id,
+        blog_id: req.body.blog_id,
+        reject_reason: req.body.reject_reason,
+        created_at: new Date().toISOString(),
+      };
+
+      return res.status(200).json(createdReject); 
+    }
+  );
+};
 const getBlogWithTags = (req, res) => {
   const blogId = req.params.blog_id;
 
   const queryBlogData = `
-    SELECT
-        b.blog_id,
-        CONCAT(u.first_name, ' ', u.last_name) AS user_name,
-        b.blog_title,
-        c.description AS category_description,
-        b.content,
-        b.status,
-        b.view,
-        b.visual,
-        b.created_at,
-        b.published_at,
-        GROUP_CONCAT(t.title) AS tag_titles,
-        GROUP_CONCAT(t.tag_id) AS tag_ids  -- Thêm tag_id vào SELECT
-    FROM
-        blog b
-    LEFT JOIN
-        category c ON b.category_id = c.category_id
-    LEFT JOIN
-        user u ON b.user_id = u.user_id
-    LEFT JOIN
-        blog_tags bt ON b.blog_id = bt.blog_id
-    LEFT JOIN
-        tag t ON bt.tag_id = t.tag_id
-    WHERE
-         b.blog_id = ?
-    GROUP BY
-          b.blog_id;
+  SELECT
+  b.blog_id,
+  CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+  b.blog_title,
+  c.description AS category_description,
+  b.content,
+  b.status,
+  b.view,
+  b.visual,
+  b.created_at,
+  b.published_at,
+  GROUP_CONCAT(t.title) AS tag_titles,
+  GROUP_CONCAT(t.tag_id) AS tag_ids,
+  GROUP_CONCAT(r.reject_reason) AS reject_reason
+FROM
+  blog b
+LEFT JOIN
+  category c ON b.category_id = c.category_id
+LEFT JOIN
+  user u ON b.user_id = u.user_id
+LEFT JOIN
+  blog_tags bt ON b.blog_id = bt.blog_id
+LEFT JOIN
+  tag t ON bt.tag_id = t.tag_id
+LEFT JOIN
+  reject r ON b.blog_id = r.blog_id
+WHERE
+   b.blog_id = ?
+GROUP BY
+    b.blog_id
+   
   `;
 
   // Thực hiện truy vấn SQL
@@ -447,7 +484,8 @@ const getBlogWithTags = (req, res) => {
         tags: blog.tag_titles.split(',').map((title, index) => ({
           title,
           tag_id: blog.tag_ids.split(',')[index]
-        }))
+        })),
+        reject_reason: blog.reject_reason
       };
     });
     res.status(200).json(blogs);
@@ -670,5 +708,5 @@ export default {
   saveBlog,
   unsaveBlog,
   getCategoryPostById,
-  getBlogbyTag
+  getBlogbyTag,createReject
 };
