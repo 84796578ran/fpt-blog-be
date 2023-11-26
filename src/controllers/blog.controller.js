@@ -185,6 +185,32 @@ const getPendingBlog = (req, res) => {
   });
 };
 
+const getAllPost = (req, res) => {
+  const query = `SELECT
+  b.blog_id,
+  b.blog_title,
+  CONCAT(u.first_name, ' ', u.last_name) AS author,
+  c.title AS category,
+  b.status,
+  b.created_at
+FROM
+  blog b
+JOIN
+  user u ON b.user_id = u.user_id
+JOIN
+  category c ON b.category_id = c.category_id;
+`;
+
+  db.query(query, (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json(err);
+    }
+
+    return res.status(200).json(data);
+  });
+};
+
 const getPostedBlog = (req, res) => {
   const page = parseInt(req.query.page); // Use req.query to access the page parameter
   const page_size = 6; // Define the desired number of results per page
@@ -670,5 +696,6 @@ export default {
   saveBlog,
   unsaveBlog,
   getCategoryPostById,
-  getBlogbyTag
+  getBlogbyTag,
+  getAllPost
 };
