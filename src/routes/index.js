@@ -7,6 +7,7 @@ import moderatorRoutes from "./moderator.route.js";
 import notificationRoute from "./notification.route.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import awardRoute from "./award.route.js";
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -40,6 +41,8 @@ const initRoutes = (app) => {
   app.use("/api/users", userRoutes);
   app.use("/api/moderator", moderatorRoutes);
   app.use("/api/notification", notificationRoute);
+  app.use("/api/award", awardRoute);
 };
 
 export default initRoutes;
+

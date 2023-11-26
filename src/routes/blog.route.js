@@ -1,6 +1,7 @@
 import express from "express";
 import blogController from "../controllers/blog.controller.js";
 const router = express.Router();
+router.get("/show-all-blog", blogController.getAllPost);
 router.get("/featured", blogController.getFeaturedBlogs);
 router.get("/major/:category_id", blogController.getMajorBlog);
 router.get("/pending", blogController.getPendingBlog);
