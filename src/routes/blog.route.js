@@ -4,7 +4,7 @@ const router = express.Router();
 router.get("/featured", blogController.getFeaturedBlogs);
 router.get("/major/:category_id", blogController.getMajorBlog);
 router.get("/pending", blogController.getPendingBlog);
-router.get("/category-blog", blogController.getCategoryPostById);
+router.get("/category-blog/:category_id", blogController.getCategoryPostById);
 
 router.get("/categories", blogController.getAllCategory);
 router.get("/categories/:category_id", blogController.getCategoryById);

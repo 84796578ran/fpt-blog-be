@@ -20,4 +20,9 @@ router.get(
   likeController.checkUserLikedComment
 );
 
+router.get(
+  "/check-saved-post/:user_id/:blog_id",
+  likeController.checkUserSavedPost
+);
+
 export default router;

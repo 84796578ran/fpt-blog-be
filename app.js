@@ -24,14 +24,14 @@ const io = new Server(server, {
 });
 
 // Middleware
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials", true);
-  next();
-});
-app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  next();
+next()
 });
+
+
 app.use(express.json());
 app.use(
   bodyParser.urlencoded({
@@ -44,6 +44,7 @@ app.use(
 app.use(cors());
 app.use(cookieParser());
 
+app.use(express.static('public'));
 // Gắn Socket.IO vào ứng dụng Express
 commentController(io);
 

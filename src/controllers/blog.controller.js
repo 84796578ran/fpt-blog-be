@@ -310,7 +310,7 @@ const getCategoryPostById = (req, res) => {
     ON
         bt.tag_id = t.tag_id
     WHERE
-        b.category_id = ? and status = 1 m
+        b.category_id = ? and status = 1 
     GROUP BY
         b.blog_id
     ORDER BY
@@ -450,148 +450,10 @@ const getBlogWithTags = (req, res) => {
         }))
       };
     });
-
-    // Trả về mảng kết quả
-    res.json(blogs);
-  });
-
-
-  const queryRelatedBlogIds = `
-    SELECT
-        b.blog_id
-    FROM
-        blog b
-    WHERE
-        b.category_id = (
-            SELECT
-                b.category_id
-            FROM
-                blog b
-            WHERE
-                b.blog_id = ?
-        )
-        AND b.blog_id <> ?
-    ORDER BY
-        b.created_at DESC
-    LIMIT 3;
-  `;
-
-  db.query(queryBlogData, [blogId], (err, resultBlogData) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Internal Server Error" });
-    }
-    if (resultBlogData.length === 0) {
-      return res.status(404).json({ error: "Blog not found" });
-    }
-
-    const blogData = resultBlogData[0];
-    blogData.tag_titles = blogData.tag_titles.split(",");
-
-    db.query(
-      queryRelatedBlogIds,
-      [blogId, blogId],
-      (err, resultRelatedBlogIds) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: "Internal Server Error" });
-        }
-
-        const relatedBlogIds = resultRelatedBlogIds.map((blog) => blog.blog_id);
-
-        return res.status(200).json({ blogData, relatedBlogIds });
-      }
-    );
+    res.status(200).json(blogs);
   });
 };
-// const getBlogWithTags = (req, res) => {
-//   const blogId = req.params.blog_id;
 
-//   const queryBlogData = `
-//     SELECT
-//         b.blog_id,
-//         CONCAT(u.first_name, ' ', u.last_name) AS user_name,
-//         b.blog_title,
-//         c.description AS category_description,
-//         b.content,
-//         b.status,
-//         b.view,
-//         b.visual,
-//         b.created_at,
-//         b.published_at,
-//         GROUP_CONCAT(t.title) AS tag_titles
-//     FROM
-//         blog b
-//     LEFT JOIN
-//         category c
-//     ON
-//         b.category_id = c.category_id
-//     LEFT JOIN
-//         user u
-//     ON
-//         b.user_id = u.user_id
-//     LEFT JOIN
-//         blog_tags bt
-//     ON
-//         b.blog_id = bt.blog_id
-//     LEFT JOIN
-//         tag t
-//     ON
-//         bt.tag_id = t.tag_id
-//     WHERE
-//         b.blog_id = ?
-//     GROUP BY
-//         b.blog_id;
-//   `;
-
-//   const queryRelatedBlogIds = `
-//     SELECT
-//         b.blog_id
-//     FROM
-//         blog b
-//     WHERE
-//         b.category_id = (
-//             SELECT
-//                 b.category_id
-//             FROM
-//                 blog b
-//             WHERE
-//                 b.blog_id = ?
-//         )
-//         AND b.blog_id <> ?
-//     ORDER BY
-//         b.created_at DESC
-//     LIMIT 3;
-//   `;
-
-//   db.query(queryBlogData, [blogId], (err, resultBlogData) => {
-//     if (err) {
-//       console.error(err);
-//       return res.status(500).json({ error: "Internal Server Error" });
-//     }
-//     if (resultBlogData.length === 0) {
-//       return res.status(404).json({ error: "Blog not found" });
-//     }
-
-//     const blogData = resultBlogData[0];
-//     blogData.tag_titles = blogData.tag_titles.split(",");
-
-//     db.query(
-//       queryRelatedBlogIds,
-//       [blogId, blogId],
-//       (err, resultRelatedBlogIds) => {
-//         if (err) {
-//           console.error(err);
-//           return res.status(500).json({ error: "Internal Server Error" });
-//         }
-
-//         const relatedBlogIds = resultRelatedBlogIds.map((blog) => blog.blog_id);
-
-//         return res.status(200).json({ blogData, relatedBlogIds });
-//       }
-//     );
-//   });
-// };
 
 const saveBlog = (req, res) => {
   const { blog_id, user_id } = req.body;
