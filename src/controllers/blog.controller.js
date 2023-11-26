@@ -187,7 +187,6 @@ const getPendingBlog = (req, res) => {
 
 const getAllPost = (req, res) => {
   const query = `SELECT
-  b.blog_id,
   b.blog_title,
   CONCAT(u.first_name, ' ', u.last_name) AS author,
   c.title AS category,
