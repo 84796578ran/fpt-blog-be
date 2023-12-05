@@ -175,7 +175,10 @@ const getPendingBlog = (req, res) => {
           return res.status(500).json({ error: "Internal Server Error" });
         } else {
           data.forEach((blog) => {
-            blog.tag_titles = blog.tag_titles.split(",");
+            if(blog.tag_titles) {
+              blog.tag_titles = blog.tag_titles.split(",");
+            }
+       
           });
 
           return res.status(200).json({ data, total_pages });
@@ -255,8 +258,10 @@ const getPostedBlog = (req, res) => {
             console.error(queryErr);
             return res.status(500).json({ error: "Internal Server Error" });
           } else {
+          
             data.forEach((blog) => {
-              blog.tag_titles = blog.tag_titles.split(",");
+              if(blog.tag_titles) {  blog.tag_titles = blog.tag_titles.split(",");}
+            
             });
 
             return res.status(200).json({ data, total_pages });
@@ -338,7 +343,9 @@ const getCategoryPostById = (req, res) => {
             return res.status(500).json({ error: "Internal Server Error" });
           } else {
             data.forEach((blog) => {
-              blog.tag_titles = blog.tag_titles.split(",");
+              if(blog.tag_titles) {
+                blog.tag_titles = blog.tag_titles.split(",");
+              }
             });
 
             return res.status(200).json({ data, total_pages });
@@ -393,8 +400,9 @@ const rejectBlog = (req, res) => {
 
 const createReject = (req, res) => {
   const reject_id = uuidv4();
+
   const query =
-    "INSERT INTO reject (reject_id, user_id, blog_id, reject_reason, created_at) VALUES (?,?,?,?,NOW())";
+    "INSERT INTO blog (reject_id, user_id, blog_id,reject_reason,created_at) VALUES (?,?,?,?,?,NOW())";
 
   db.query(
     query,
@@ -403,7 +411,6 @@ const createReject = (req, res) => {
       req.body.user_id,
       req.body.blog_id,
       req.body.reject_reason,
-      
     ],
     (err, data) => {
       if (err) {
@@ -423,6 +430,7 @@ const createReject = (req, res) => {
     }
   );
 };
+
 const getBlogWithTags = (req, res) => {
   const blogId = req.params.blog_id;
 
@@ -678,7 +686,9 @@ const getBlogbyTag = (req, res) => {
             return res.status(500).json({ error: "Internal Server Error" });
           } else {
             data.forEach((blog) => {
-              blog.tag_titles = blog.tag_titles.split(",");
+              if(blog.tag_titles) {
+                blog.tag_titles = blog.tag_titles.split(",");
+              }
             });
 
             return res.status(200).json({ data, total_pages });
@@ -686,6 +696,31 @@ const getBlogbyTag = (req, res) => {
         }
       );
     }
+  });
+};
+
+const getAllPost = (req, res) => {
+  const query = `SELECT
+  b.blog_title,
+  CONCAT(u.first_name, ' ', u.last_name) AS author,
+  c.title AS category,
+  b.status,
+  b.created_at
+FROM
+  blog b
+JOIN
+  user u ON b.user_id = u.user_id
+JOIN
+  category c ON b.category_id = c.category_id;
+`;
+
+  db.query(query, (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json(err);
+    }
+
+    return res.status(200).json(data);
   });
 };
 
@@ -708,5 +743,7 @@ export default {
   saveBlog,
   unsaveBlog,
   getCategoryPostById,
-  getBlogbyTag,createReject
+  getBlogbyTag,
+  createReject,
+  getAllPost
 };

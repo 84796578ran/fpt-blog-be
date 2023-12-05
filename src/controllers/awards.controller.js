@@ -1,6 +1,5 @@
 import { db } from "../database/connect.js";
 
-
   const getTop10LikeOfUser = (req, res) => {
     const query = `SELECT 
     u.user_id,
@@ -50,8 +49,8 @@ LIMIT 10;
       return res.status(200).json(data);
     });
   };
+  
   const getAwardModerator = (req, res) => {
-    //const user_id = req.params.user_id;
     const query = `
     SELECT CONCAT(u.last_name, ' ', u.first_name) AS full_name, COUNT(b.status) AS total_Like, u.image AS avatar
   FROM user u
@@ -68,10 +67,27 @@ LIMIT 10;
   
     })
   };
+// second minute hours day week month
+// const job = new cron.schedule(
+//   "*/15 * * * * *",
+//   () => {
+//     console.log("//////........");
+//   },
+//   false,
+//   "Asia/Ho_Chi_Minh",
+// );
 
+// job.start();
+
+
+// setTimeout( () => {
+//   // console.log("............");
+//   getAwarMorderater();
+//   console.log(getAwarMorderater, "ioinda................");
+// }, 60 * 1000);
 
   export default {
-    getTop10LikeOfUser,
+    getTop10LikeOfUser ,
     getTop10CmtOfUser,
     getAwardModerator,
   };

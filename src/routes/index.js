@@ -5,35 +5,12 @@ import commentsRoutes from "./comments.route.js";
 import likesRoutes from "./likes.route.js";
 import moderatorRoutes from "./moderator.route.js";
 import notificationRoute from "./notification.route.js";
-import swaggerJsdoc from "swagger-jsdoc";
-import swaggerUi from "swagger-ui-express";
 import awardRoute from "./award.route.js";
-const options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "FU-BLOG COMMUNITY",
-      version: "0.1",
-      description:
-        "This is the document for API of FU-BLOG COMMUNITY made with Express and documented by Swagger.",
-      contact: {
-        name: "ducnltdev",
-        email: "ducnltdev@gmail.com",
-      },
-    },
-    servers: [
-      {
-        url: "http://localhost:5000",
-      },
-    ],
-  },
-  apis: ["./src/routes/*.js"],
-};
 
-const spacs = swaggerJsdoc(options);
+
+
 
 const initRoutes = (app) => {
-  app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(spacs));
   app.use("/api/auth", authRoutes);
   app.use("/api/comments", commentsRoutes);
   app.use("/api/likes", likesRoutes);
